@@ -67,20 +67,25 @@ def _overpass_post(mirror: str, query: str, timeout: int) -> bytes:
 
 
 def fetch_from_overpass() -> list:
-    """Try each mirror in order; return the elements list on first success."""
+    """Try each mirror up to 3 rounds with waits; return elements on first success."""
     print("Querying Overpass API (takes 2–5 minutes for all of Germany)...")
-    for mirror in OVERPASS_MIRRORS:
-        try:
-            print(f"  → {mirror} ... ", end="", flush=True)
-            raw  = _overpass_post(mirror, OVERPASS_QUERY, timeout=360)
-            data = json.loads(raw.decode("utf-8"))
-            elems = data.get("elements", [])
-            print(f"OK  ({len(elems)} elements)")
-            return elems
-        except Exception as exc:
-            print(f"FAILED ({exc})")
-            time.sleep(3)
-    print("\nAll Overpass mirrors failed. Try again in a few minutes.", file=sys.stderr)
+    for attempt in range(3):
+        if attempt > 0:
+            wait = 60 * attempt
+            print(f"\n  Retry {attempt}/2 — waiting {wait}s for Overpass to recover...")
+            time.sleep(wait)
+        for mirror in OVERPASS_MIRRORS:
+            try:
+                print(f"  → {mirror} ... ", end="", flush=True)
+                raw  = _overpass_post(mirror, OVERPASS_QUERY, timeout=360)
+                data = json.loads(raw.decode("utf-8"))
+                elems = data.get("elements", [])
+                print(f"OK  ({len(elems)} elements)")
+                return elems
+            except Exception as exc:
+                print(f"FAILED ({exc})")
+                time.sleep(5)
+    print("\nAll Overpass mirrors failed after 3 attempts. Try again later.", file=sys.stderr)
     sys.exit(1)
 
 # ── Parser ────────────────────────────────────────────────────────────────────
