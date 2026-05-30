@@ -1,0 +1,26 @@
+name: Monthly Signs Update
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"   # 1st of every month at 03:00 UTC
+  workflow_dispatch:        # manual trigger via GitHub UI → Actions tab
+
+jobs:
+  update-signs:
+    name: Import German Ortsschilder from OSM
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run import
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/import_signs.py

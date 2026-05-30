@@ -1,0 +1,24 @@
+bin/
+.project
+.settings
+.externalToolBuilders/
+.idea/
+*.prg
+*.iq
+
+# Private keys — never commit
+*.der
+*.pem
+*.key
+
+# Mac + editor noise
+.DS_Store
+*.swp
+
+# Claude local settings (personal, not project-wide)
+.claude/settings.local.json
+.claude/launch.json
+
+# Large skill framework (Claude tooling, not app code)
+.agents/
+.claude/skills/
