@@ -322,6 +322,12 @@
     const errEl    = document.getElementById("login-error");
     errEl.style.display = "none";
 
+    if (!email || !password) {
+      errEl.textContent = "Bitte E-Mail und Passwort eingeben.";
+      errEl.style.display = "block";
+      return;
+    }
+
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       errEl.textContent = error.message;
@@ -339,8 +345,8 @@
     errEl.style.display = "none";
     infoEl.style.display = "none";
 
-    if (!deviceId) {
-      errEl.textContent = "Bitte Device ID eingeben.";
+    if (!name || !email || !password || !deviceId) {
+      errEl.textContent = "Bitte alle Felder ausfüllen.";
       errEl.style.display = "block";
       return;
     }
