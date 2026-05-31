@@ -335,8 +335,11 @@
       errEl.textContent = error.message;
       errEl.style.display = "block";
     } else {
-      infoEl.textContent = "✓ Registriert! Bitte E-Mail bestätigen, dann anmelden.";
+      infoEl.textContent = "✓ Registriert! Bitte E-Mail bestätigen.";
       infoEl.style.display = "block";
+      document.getElementById("reg-email").value    = "";
+      document.getElementById("reg-password").value = "";
+      document.getElementById("reg-device").value   = "";
     }
   });
 
