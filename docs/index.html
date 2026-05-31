@@ -5,196 +5,533 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ortsschilder Sprint</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 104'%3E%3Crect x='37' y='64' width='6' height='40' fill='%23aaa'/%3E%3Crect x='3' y='3' width='74' height='58' rx='11' fill='%23000'/%3E%3Crect x='8' y='8' width='64' height='48' rx='8' fill='%23FFCC00'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #08080a;
+      --surface:   #0d0d10;
+      --surface2:  #131316;
+      --surface3:  #1a1a1e;
+      --border:    #1e1e26;
+      --border2:   #28282f;
+      --yellow:    #FFCC00;
+      --yellow-lo: rgba(255,204,0,0.07);
+      --yellow-mid:rgba(255,204,0,0.14);
+      --red:       #ff4444;
+      --green:     #00e676;
+      --text:      #f0f0ec;
+      --text2:     #777;
+      --text3:     #333;
+      --r:         10px;
+      --fd:        'Bebas Neue', sans-serif;
+      --fb:        'Outfit', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
+      font-family: var(--fb);
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
     }
 
-    /* ── Ortsschild Header ── */
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ══════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════ */
     header {
-      background: #1a1a1a;
-      border-bottom: 2px solid #333;
-      padding: 1.8rem 1.5rem;
-      text-align: center;
-    }
-    .ortsschild {
-      display: inline-block;
-      background: #FFCC00;
-      border: 5px solid #000;
-      border-radius: 14px;
-      padding: 14px 36px;
-      color: #000;
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    /* ── Auth Screen ── */
+    /* Asphalt-like road texture */
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px, transparent 48px,
+          rgba(255,255,255,0.012) 48px, rgba(255,255,255,0.012) 50px
+        ),
+        repeating-linear-gradient(
+          -60deg,
+          transparent,
+          transparent 40px,
+          rgba(255,204,0,0.018) 40px,
+          rgba(255,204,0,0.018) 42px
+        );
+      pointer-events: none;
+    }
+
+    /* Yellow glow line at bottom */
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 15%; right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+    }
+
+    .header-sign {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      cursor: default;
+    }
+
+    .header-sign-body {
+      background: var(--yellow);
+      border: 5px solid #000;
+      border-radius: 16px;
+      padding: 12px 44px 14px;
+      font-family: var(--fd);
+      font-size: 2.4rem;
+      letter-spacing: 0.1em;
+      color: #000;
+      box-shadow: 4px 4px 0 #000, 0 12px 48px rgba(255,204,0,0.18);
+      transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s;
+      white-space: nowrap;
+    }
+    .header-sign-body:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 5px 7px 0 #000, 0 20px 60px rgba(255,204,0,0.28);
+    }
+
+    .header-pole {
+      width: 7px;
+      height: 40px;
+      background: linear-gradient(to right, #bbb 0%, #666 50%, #bbb 100%);
+      border-radius: 0 0 4px 4px;
+      box-shadow: 1px 0 6px rgba(0,0,0,0.5);
+    }
+
+    /* Racing scene SVG */
+    .header-scene {
+      width: 100%;
+      max-width: 560px;
+      height: auto;
+      position: relative;
+      z-index: 1;
+      margin-top: -4px;
+      filter: drop-shadow(0 6px 24px rgba(255,204,0,0.14));
+      transition: filter 0.3s;
+    }
+    .header-scene:hover {
+      filter: drop-shadow(0 8px 32px rgba(255,204,0,0.26));
+    }
+
+    .header-tagline {
+      font-size: 0.68rem;
+      color: var(--text3);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+      padding: 0.6rem 0 1.1rem;
+    }
+
+    /* ══════════════════════════════════════
+       AUTH SCREEN
+    ══════════════════════════════════════ */
     #auth-screen {
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: calc(100vh - 120px);
-      padding: 2rem;
+      align-items: flex-start;
+      padding: 3rem 1.5rem 4rem;
+      min-height: calc(100vh - 170px);
     }
+
     .auth-card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 2rem;
       width: 100%;
-      max-width: 400px;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-top: 2px solid var(--yellow);
+      border-radius: 14px;
+      padding: 2rem 1.8rem;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      animation: fadeDown 0.3s ease both;
     }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .auth-card h2 {
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-      color: #f0f0f0;
+      font-family: var(--fd);
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin-bottom: 1.4rem;
     }
+
     .auth-input {
       width: 100%;
-      background: #0f0f0f;
-      border: 1px solid #333;
+      background: var(--surface2);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 0.75rem 1rem;
-      color: #f0f0f0;
-      font-size: 0.95rem;
-      margin-bottom: 0.75rem;
+      padding: 0.72rem 0.9rem;
+      color: var(--text);
+      font-family: var(--fb);
+      font-size: 0.88rem;
+      margin-bottom: 0.55rem;
       outline: none;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
     }
-    .auth-input:focus { border-color: #FFCC00; }
-    .auth-input::placeholder { color: #555; }
+    .auth-input:focus {
+      border-color: var(--yellow);
+      background: var(--surface3);
+      box-shadow: 0 0 0 3px var(--yellow-lo);
+    }
+    .auth-input::placeholder { color: var(--text3); }
 
     .btn-primary {
       width: 100%;
-      background: #FFCC00;
+      background: var(--yellow);
       color: #000;
-      font-weight: 700;
+      font-family: var(--fd);
+      font-size: 1.25rem;
+      letter-spacing: 0.1em;
       border: none;
       border-radius: 8px;
-      padding: 0.75rem;
-      font-size: 1rem;
+      padding: 0.72rem 1rem;
       cursor: pointer;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.8rem;
+      margin-top: 0.3rem;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
     }
-    .btn-primary:hover { background: #e6b800; }
-    .btn-primary:disabled { background: #555; color: #888; cursor: not-allowed; }
-
-    .btn-secondary {
-      width: 100%;
-      background: #2a2a2a;
-      color: #ccc;
-      border: none;
-      border-radius: 8px;
-      padding: 0.6rem;
-      font-size: 0.85rem;
-      cursor: pointer;
-      margin-bottom: 0.75rem;
+    .btn-primary:hover {
+      background: #f5c400;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255,204,0,0.25);
     }
-    .btn-secondary:hover { background: #333; }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+    .btn-primary:disabled {
+      background: var(--surface3);
+      color: var(--text3);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
     .auth-switch {
       text-align: center;
-      color: #555;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
+      color: var(--text3);
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
     }
-    .auth-switch a { color: #FFCC00; cursor: pointer; text-decoration: none; }
+    .auth-switch a { color: var(--yellow); cursor: pointer; text-decoration: none; font-weight: 600; }
     .auth-switch a:hover { text-decoration: underline; }
 
     .auth-error {
-      background: #2a1a1a;
-      border: 1px solid #ff5252;
+      background: rgba(255,68,68,0.07);
+      border: 1px solid rgba(255,68,68,0.25);
       border-radius: 8px;
-      padding: 0.6rem 1rem;
-      color: #ff5252;
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
+      padding: 0.55rem 0.9rem;
+      color: var(--red);
+      font-size: 0.8rem;
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
     }
     .auth-info {
-      background: #1a2a1a;
-      border: 1px solid #00c853;
+      background: rgba(0,230,118,0.07);
+      border: 1px solid rgba(0,230,118,0.25);
       border-radius: 8px;
-      padding: 0.6rem 1rem;
-      color: #00c853;
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
+      padding: 0.55rem 0.9rem;
+      color: var(--green);
+      font-size: 0.8rem;
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
     }
 
-    /* ── App Screen ── */
+    /* ══════════════════════════════════════
+       APP SCREEN
+    ══════════════════════════════════════ */
     #app-screen { display: none; }
 
     .app-bar {
-      background: #1a1a1a;
-      border-bottom: 1px solid #2a2a2a;
-      padding: 0.6rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.55rem 1.4rem;
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 1rem;
+      gap: 0.9rem;
     }
-    .user-info { font-size: 0.8rem; color: #555; }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem 0.25rem 0.5rem;
+    }
+    .user-avatar {
+      width: 20px; height: 20px;
+      background: var(--yellow);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--fd);
+      font-size: 0.7rem;
+      color: #000;
+      flex-shrink: 0;
+    }
+    .user-info {
+      font-size: 0.78rem;
+      color: var(--text2);
+      font-weight: 500;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .btn-logout {
       background: none;
-      border: 1px solid #333;
+      border: 1px solid var(--border2);
       border-radius: 6px;
-      color: #888;
-      padding: 0.3rem 0.8rem;
-      font-size: 0.8rem;
+      color: var(--text2);
+      padding: 0.28rem 0.8rem;
+      font-size: 0.75rem;
+      font-family: var(--fb);
+      font-weight: 500;
       cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
     }
-    .btn-logout:hover { border-color: #ff5252; color: #ff5252; }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
 
-    .container { max-width: 700px; margin: 0 auto; padding: 1.5rem; }
-    .ride-list { display: flex; flex-direction: column; gap: 1rem; }
+    /* ══════════════════════════════════════
+       RIDE LIST
+    ══════════════════════════════════════ */
+    .container {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 1.6rem 1rem 3rem;
+    }
+
+    .section-label {
+      font-family: var(--fd);
+      font-size: 0.9rem;
+      letter-spacing: 0.18em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      padding-left: 2px;
+    }
+
+    .ride-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
 
     .ride-card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      border-radius: var(--r);
       overflow: hidden;
+      transition: border-left-color 0.2s, box-shadow 0.2s, background 0.15s;
+      animation: rideIn 0.35s ease both;
     }
+    .ride-card:hover {
+      border-left-color: var(--yellow);
+      box-shadow: 0 4px 28px rgba(255,204,0,0.05);
+    }
+    .ride-card.open {
+      border-left-color: var(--yellow);
+      box-shadow: 0 6px 32px rgba(255,204,0,0.08);
+    }
+
+    @keyframes rideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ride-card:nth-child(1)  { animation-delay: 0.04s; }
+    .ride-card:nth-child(2)  { animation-delay: 0.08s; }
+    .ride-card:nth-child(3)  { animation-delay: 0.12s; }
+    .ride-card:nth-child(4)  { animation-delay: 0.16s; }
+    .ride-card:nth-child(5)  { animation-delay: 0.20s; }
+    .ride-card:nth-child(6)  { animation-delay: 0.24s; }
+    .ride-card:nth-child(n+7){ animation-delay: 0.28s; }
+
     .ride-header {
-      padding: 1rem 1.2rem;
+      padding: 0.95rem 1.2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      user-select: none;
+      gap: 1rem;
     }
-    .ride-card:hover .ride-header { background: #1f1f1f; }
-    .ride-title { font-size: 1rem; font-weight: 600; }
-    .ride-meta  { font-size: 0.85rem; color: #888; margin-top: 0.2rem; }
-    .toggle-icon { color: #555; transition: transform 0.2s; }
-    .ride-card.open .toggle-icon { transform: rotate(180deg); color: #FFCC00; }
+    .ride-header:hover { background: rgba(255,255,255,0.015); }
 
-    .ride-body { display: none; border-top: 1px solid #2a2a2a; }
+    .ride-title {
+      font-family: var(--fd);
+      font-size: 1.3rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .ride-meta {
+      font-size: 0.76rem;
+      color: var(--text2);
+      font-weight: 400;
+    }
+
+    .toggle-icon {
+      flex-shrink: 0;
+      color: var(--text3);
+      transition: transform 0.25s cubic-bezier(.34,1.2,.64,1), color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .ride-card.open .toggle-icon {
+      transform: rotate(180deg);
+      color: var(--yellow);
+    }
+
+    /* Smooth reveal animation for ride body */
+    .ride-body {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
     .ride-card.open .ride-body { display: block; }
-    .map-container { height: 320px; }
+
+    .map-container {
+      height: 280px;
+    }
+    .map-container .leaflet-container {
+      background: #0e0e14;
+    }
 
     .ride-actions {
-      padding: 0.75rem 1.2rem;
-      border-top: 1px solid #2a2a2a;
+      padding: 0.65rem 1.1rem;
+      border-top: 1px solid var(--border);
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      background: var(--surface2);
     }
-    .btn { padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; border: none; }
-    .btn-export { background: #FFCC00; color: #000; font-weight: 600; }
-    .btn-image  { background: #1a1a2e; color: #aaa; border: 1px solid #333; }
-    .btn-delete { background: #2a2a2a; color: #ff5252; }
 
-    .loading { text-align: center; padding: 3rem; color: #555; }
-    .error   { color: #ff5252; text-align: center; padding: 2rem; }
+    .btn {
+      padding: 0.42rem 1rem;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-family: var(--fb);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.96); }
 
-    /* ── Leaflet Popups (Sign style) ── */
+    .btn-image {
+      background: var(--yellow);
+      color: #000;
+    }
+    .btn-image:hover {
+      background: #f5c400;
+      box-shadow: 0 4px 16px rgba(255,204,0,0.3);
+    }
+    .btn-image:disabled {
+      background: var(--surface3);
+      color: var(--text2);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border2);
+    }
+    .btn-delete:hover {
+      background: rgba(255,68,68,0.08);
+      color: var(--red);
+      border-color: rgba(255,68,68,0.25);
+    }
+
+    /* ══════════════════════════════════════
+       STATES
+    ══════════════════════════════════════ */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1rem;
+      color: var(--text2);
+      font-size: 0.85rem;
+      gap: 1rem;
+    }
+    .loading::before {
+      content: '';
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text2);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .empty-state strong {
+      display: block;
+      font-family: var(--fd);
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      color: var(--text3);
+      margin-bottom: 0.5rem;
+    }
+
+    .error {
+      color: var(--red);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+    }
+
+    /* ══════════════════════════════════════
+       SIGN POPUP (Leaflet)
+    ══════════════════════════════════════ */
     .sign-popup .leaflet-popup-content-wrapper {
-      background: #FFCC00;
+      background: var(--yellow);
       border: 4px solid #000;
       border-radius: 12px;
       box-shadow: 3px 3px 0 #888, 0 4px 16px rgba(0,0,0,0.4);
@@ -202,11 +539,18 @@
       min-width: 160px;
     }
     .sign-popup .leaflet-popup-tip-container { display: none; }
-    .sign-popup .leaflet-popup-close-button { color: #000 !important; font-size: 18px !important; top: 6px !important; right: 8px !important; }
+    .sign-popup .leaflet-popup-close-button {
+      color: #000 !important;
+      font-size: 18px !important;
+      top: 6px !important;
+      right: 8px !important;
+    }
     .sign-popup .leaflet-popup-content { margin: 12px 16px; }
+
     .popup-sign-title {
-      font-weight: 800;
-      font-size: 1rem;
+      font-family: var(--fd);
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
       color: #000;
       text-align: center;
       padding-bottom: 8px;
@@ -230,11 +574,173 @@
 </head>
 <body>
 
+<!-- ══ Header ══ -->
 <header>
-  <div class="ortsschild">Ortsschilder Sprint</div>
+  <div class="header-sign">
+    <div class="header-sign-body">Ortsschilder Sprint</div>
+    <div class="header-pole"></div>
+  </div>
+
+  <!-- Racing scene: cyclists sprinting towards the Ortsschild -->
+  <svg class="header-scene" viewBox="0 0 560 168" fill="none" xmlns="http://www.w3.org/2000/svg"
+       stroke-linecap="round" stroke-linejoin="round">
+    <defs>
+      <linearGradient id="pole-g" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#bbb"/>
+        <stop offset="50%" stop-color="#666"/>
+        <stop offset="100%" stop-color="#bbb"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Road surface -->
+    <rect x="0" y="145" width="560" height="23" fill="#0d0d10"/>
+    <rect x="0" y="143" width="560" height="4" fill="#161619"/>
+    <!-- Road center line dashes -->
+    <line x1="20"  y1="153" x2="52"  y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+    <line x1="88"  y1="153" x2="120" y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+    <line x1="156" y1="153" x2="188" y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+    <line x1="224" y1="153" x2="256" y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+    <line x1="292" y1="153" x2="324" y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+    <line x1="360" y1="153" x2="392" y2="153" stroke="#2a2a2e" stroke-width="2.5"/>
+
+    <!-- ═══ ORTSSCHILD (right side) ═══ -->
+    <!-- Pole -->
+    <rect x="474" y="62" width="8" height="83" fill="url(#pole-g)" rx="2"/>
+    <!-- Black border -->
+    <rect x="425" y="5" width="104" height="60" rx="12" fill="#000"/>
+    <!-- Yellow sign -->
+    <rect x="430" y="9"  width="94" height="52" rx="9" fill="#FFCC00"/>
+    <!-- Sign text -->
+    <text x="477" y="38" font-family="'Bebas Neue', Arial, sans-serif" font-size="26"
+          fill="#000" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">ZIEL</text>
+
+    <!-- ═══ SPEED LINES (motion effect behind cyclists) ═══ -->
+    <line x1="6"  y1="103" x2="44" y2="103" stroke="#FFCC00" stroke-width="1.5" opacity="0.13"/>
+    <line x1="2"  y1="112" x2="50" y2="112" stroke="#FFCC00" stroke-width="1"   opacity="0.09"/>
+    <line x1="10" y1="120" x2="40" y2="120" stroke="#FFCC00" stroke-width="1"   opacity="0.07"/>
+    <line x1="72" y1="110" x2="100" y2="110" stroke="#FFCC00" stroke-width="1.2" opacity="0.10"/>
+    <line x1="68" y1="118" x2="98"  y2="118" stroke="#FFCC00" stroke-width="1"   opacity="0.07"/>
+
+    <!-- ═══ CYCLIST 3 — back, smallest (road at y=145) ═══ -->
+    <g transform="translate(105,145) scale(0.72)" stroke="#FFCC00">
+      <!-- Rear wheel -->
+      <circle cx="0"  cy="-22" r="22" stroke-width="4"/>
+      <line x1="0"  y1="-44" x2="0"  y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="-22" y1="-22" x2="22" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="0"  cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- Front wheel -->
+      <circle cx="58" cy="-22" r="22" stroke-width="4"/>
+      <line x1="58" y1="-44" x2="58" y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="36" y1="-22" x2="80" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="58" cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- BB + chainring -->
+      <circle cx="26" cy="-16" r="5" fill="#FFCC00" stroke="none"/>
+      <circle cx="26" cy="-16" r="14" stroke-width="1.5" opacity="0.35"/>
+      <!-- Frame -->
+      <line x1="0"  y1="-22" x2="26" y2="-16" stroke-width="4"/>
+      <line x1="0"  y1="-22" x2="18" y2="-62" stroke-width="2.5"/>
+      <line x1="26" y1="-16" x2="18" y2="-62" stroke-width="4.5"/>
+      <line x1="18" y1="-62" x2="50" y2="-35" stroke-width="3"/>
+      <line x1="26" y1="-16" x2="50" y2="-35" stroke-width="4.5"/>
+      <line x1="50" y1="-35" x2="58" y2="-22" stroke-width="4"/>
+      <!-- Saddle -->
+      <path d="M9,-66 C13,-71 22,-71 31,-66" stroke-width="4.5" fill="none"/>
+      <!-- Stem + drop bar -->
+      <line x1="50" y1="-35" x2="54" y2="-50" stroke-width="3.5"/>
+      <path d="M50,-50 C54,-57 63,-57 67,-50 C69,-43 66,-34 61,-33" stroke-width="3" fill="none"/>
+      <!-- Rider — leg phase: power leg at 5 o'clock -->
+      <line x1="18" y1="-66" x2="52" y2="-52" stroke-width="4.5"/>
+      <ellipse cx="59" cy="-44" rx="8.5" ry="6.5" fill="#FFCC00" stroke="none" opacity="0.9"/>
+      <line x1="52" y1="-52" x2="60" y2="-42" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="9"  y2="-42" stroke-width="4"/>
+      <line x1="9"  y1="-42" x2="26" y2="-16" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="30" y2="-76" stroke-width="4"/>
+      <line x1="30" y1="-76" x2="40" y2="-67" stroke-width="3.5"/>
+    </g>
+
+    <!-- ═══ CYCLIST 2 — middle (road at y=145) ═══ -->
+    <g transform="translate(185,145) scale(0.86)" stroke="#FFCC00">
+      <!-- Rear wheel -->
+      <circle cx="0"  cy="-22" r="22" stroke-width="4"/>
+      <line x1="0"  y1="-44" x2="0"  y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="-22" y1="-22" x2="22" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="0"  cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- Front wheel -->
+      <circle cx="58" cy="-22" r="22" stroke-width="4"/>
+      <line x1="58" y1="-44" x2="58" y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="36" y1="-22" x2="80" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="58" cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- BB + chainring -->
+      <circle cx="26" cy="-16" r="5" fill="#FFCC00" stroke="none"/>
+      <circle cx="26" cy="-16" r="14" stroke-width="1.5" opacity="0.35"/>
+      <!-- Frame -->
+      <line x1="0"  y1="-22" x2="26" y2="-16" stroke-width="4"/>
+      <line x1="0"  y1="-22" x2="18" y2="-62" stroke-width="2.5"/>
+      <line x1="26" y1="-16" x2="18" y2="-62" stroke-width="4.5"/>
+      <line x1="18" y1="-62" x2="50" y2="-35" stroke-width="3"/>
+      <line x1="26" y1="-16" x2="50" y2="-35" stroke-width="4.5"/>
+      <line x1="50" y1="-35" x2="58" y2="-22" stroke-width="4"/>
+      <!-- Saddle -->
+      <path d="M9,-66 C13,-71 22,-71 31,-66" stroke-width="4.5" fill="none"/>
+      <!-- Stem + drop bar -->
+      <line x1="50" y1="-35" x2="54" y2="-50" stroke-width="3.5"/>
+      <path d="M50,-50 C54,-57 63,-57 67,-50 C69,-43 66,-34 61,-33" stroke-width="3" fill="none"/>
+      <!-- Rider — leg phase: power leg at 4 o'clock (more extended) -->
+      <line x1="18" y1="-66" x2="52" y2="-52" stroke-width="4.5"/>
+      <ellipse cx="59" cy="-44" rx="8.5" ry="6.5" fill="#FFCC00" stroke="none" opacity="0.9"/>
+      <line x1="52" y1="-52" x2="60" y2="-42" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="6"  y2="-38" stroke-width="4"/>
+      <line x1="6"  y1="-38" x2="26" y2="-16" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="34" y2="-79" stroke-width="4"/>
+      <line x1="34" y1="-79" x2="44" y2="-69" stroke-width="3.5"/>
+    </g>
+
+    <!-- ═══ CYCLIST 1 — lead, full size (road at y=145) ═══ -->
+    <g transform="translate(268,145) scale(1.0)" stroke="#FFCC00">
+      <!-- Rear wheel -->
+      <circle cx="0"  cy="-22" r="22" stroke-width="4"/>
+      <line x1="0"  y1="-44" x2="0"  y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="-22" y1="-22" x2="22" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="0"  cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- Front wheel -->
+      <circle cx="58" cy="-22" r="22" stroke-width="4"/>
+      <line x1="58" y1="-44" x2="58" y2="0"   stroke-width="1.2" opacity="0.35"/>
+      <line x1="36" y1="-22" x2="80" y2="-22" stroke-width="1.2" opacity="0.35"/>
+      <circle cx="58" cy="-22" r="3.5" fill="#FFCC00" stroke="none"/>
+      <!-- BB + chainring -->
+      <circle cx="26" cy="-16" r="5" fill="#FFCC00" stroke="none"/>
+      <circle cx="26" cy="-16" r="14" stroke-width="1.5" opacity="0.35"/>
+      <!-- Frame -->
+      <line x1="0"  y1="-22" x2="26" y2="-16" stroke-width="4"/>
+      <line x1="0"  y1="-22" x2="18" y2="-62" stroke-width="2.5"/>
+      <line x1="26" y1="-16" x2="18" y2="-62" stroke-width="4.5"/>
+      <line x1="18" y1="-62" x2="50" y2="-35" stroke-width="3"/>
+      <line x1="26" y1="-16" x2="50" y2="-35" stroke-width="4.5"/>
+      <line x1="50" y1="-35" x2="58" y2="-22" stroke-width="4"/>
+      <!-- Saddle -->
+      <path d="M9,-66 C13,-71 22,-71 31,-66" stroke-width="4.5" fill="none"/>
+      <!-- Stem + drop bar -->
+      <line x1="50" y1="-35" x2="54" y2="-50" stroke-width="3.5"/>
+      <path d="M50,-50 C54,-57 63,-57 67,-50 C69,-43 66,-34 61,-33" stroke-width="3" fill="none"/>
+      <!-- Rider — lead sprint, power leg fully extended (6 o'clock) -->
+      <line x1="18" y1="-66" x2="52" y2="-52" stroke-width="4.5"/>
+      <ellipse cx="59" cy="-44" rx="8.5" ry="6.5" fill="#FFCC00" stroke="none" opacity="0.9"/>
+      <line x1="52" y1="-52" x2="60" y2="-42" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="10" y2="-40" stroke-width="4"/>
+      <line x1="10" y1="-40" x2="26" y2="-16" stroke-width="3.5"/>
+      <line x1="18" y1="-66" x2="32" y2="-80" stroke-width="4"/>
+      <line x1="32" y1="-80" x2="43" y2="-70" stroke-width="3.5"/>
+    </g>
+
+    <!-- Finishing glow around sign -->
+    <rect x="423" y="3" width="108" height="64" rx="13"
+          fill="none" stroke="#FFCC00" stroke-width="1" opacity="0.2"/>
+  </svg>
+
+  <p class="header-tagline">Wer ist zuerst am Ortsschild?</p>
 </header>
 
-<!-- ── Auth Screen ── -->
+<!-- ══ Auth Screen ══ -->
 <div id="auth-screen">
   <div class="auth-card">
 
@@ -242,8 +748,8 @@
     <div id="login-view">
       <h2>Anmelden</h2>
       <div id="login-error" class="auth-error" style="display:none"></div>
-      <input class="auth-input" type="email"    id="login-email"    placeholder="E-Mail">
-      <input class="auth-input" type="password" id="login-password" placeholder="Passwort">
+      <input class="auth-input" type="email"    id="login-email"    placeholder="E-Mail" autocomplete="email">
+      <input class="auth-input" type="password" id="login-password" placeholder="Passwort" autocomplete="current-password">
       <button class="btn-primary" id="btn-login">Anmelden</button>
       <div class="auth-switch">Noch kein Account? <a id="to-register">Registrieren</a></div>
     </div>
@@ -254,8 +760,8 @@
       <div id="reg-error" class="auth-error" style="display:none"></div>
       <div id="reg-info"  class="auth-info"  style="display:none"></div>
       <input class="auth-input" type="text"     id="reg-name"     placeholder="Name">
-      <input class="auth-input" type="email"    id="reg-email"    placeholder="E-Mail">
-      <input class="auth-input" type="password" id="reg-password" placeholder="Passwort">
+      <input class="auth-input" type="email"    id="reg-email"    placeholder="E-Mail" autocomplete="email">
+      <input class="auth-input" type="password" id="reg-password" placeholder="Passwort" autocomplete="new-password">
       <input class="auth-input" type="text"     id="reg-device"   placeholder="Garmin Device ID">
       <button class="btn-primary" id="btn-register">Registrieren</button>
       <div class="auth-switch">Schon registriert? <a id="to-login">Anmelden</a></div>
@@ -264,10 +770,13 @@
   </div>
 </div>
 
-<!-- ── App Screen ── -->
+<!-- ══ App Screen ══ -->
 <div id="app-screen">
   <div class="app-bar">
-    <span class="user-info" id="user-info"></span>
+    <div class="user-chip">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-info" id="user-info"></span>
+    </div>
     <button class="btn-logout" id="btn-logout">Abmelden</button>
   </div>
   <div class="container">
@@ -389,6 +898,7 @@
       const displayName = session.user.user_metadata?.display_name || session.user.email;
       const deviceId    = session.user.user_metadata?.device_id || "";
       document.getElementById("user-info").textContent = displayName;
+      document.getElementById("user-avatar").textContent = displayName ? displayName[0].toUpperCase() : "?";
 
       // Upsert profile so rankings can show names
       if (deviceId && displayName) {
@@ -416,7 +926,6 @@
 
   async function loadProfiles(deviceIds) {
     if (!deviceIds.length) return {};
-    const ids = deviceIds.map(d => `"${d}"`).join(",");
     try {
       const rows = await fetchJSON(`/rest/v1/profiles?device_id=in.(${encodeURIComponent(deviceIds.join(","))})&select=device_id,display_name`);
       const map = {};
@@ -446,13 +955,12 @@
       .sort(([, a], [, b]) => a - b);
     if (group.length === 0) return '<div class="popup-sign-loading">Keine Daten</div>';
 
-    // Load display names for all devices in this group
     const profiles = await loadProfiles(group.map(([dev]) => dev));
 
     return group.map(([dev, ts], i) => {
-      const delta   = (ts - leaderTs).toFixed(1);
-      const isMe    = myDeviceId && dev === myDeviceId;
-      const devName = isMe ? "Du" : (profiles[dev] || dev);
+      const delta    = (ts - leaderTs).toFixed(1);
+      const isMe     = myDeviceId && dev === myDeviceId;
+      const devName  = isMe ? "Du" : (profiles[dev] || dev);
       const deltaStr = i === 0 ? "" : `<span class="popup-sign-delta">+${delta}s</span>`;
       return `<div class="popup-sign-row ${isMe ? "me" : ""}">
         <span>${i+1}. ${devName}</span>${deltaStr}
@@ -539,7 +1047,7 @@
       }
       if (!nearest) continue;
       const marker = L.marker([nearest[0], nearest[1]], { icon: signIcon }).addTo(map);
-      const title = `<div class="popup-sign-title">${c.sign_name}</div>`;
+      const title  = `<div class="popup-sign-title">${c.sign_name}</div>`;
       marker.bindPopup(
         title + `<div class="popup-sign-loading">Lade…</div>`,
         { maxWidth: 260, className: "sign-popup" }
@@ -602,13 +1110,9 @@
     const nameFont = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
     const rankFont = "bold 17px -apple-system, BlinkMacSystemFont, sans-serif";
     const top3     = (ranking || []).slice(0, 3);
-    const padX     = 18;
-    const padY     = 10;
-    const nameH    = 28;
-    const rowH     = 22;
-    const divH     = top3.length > 0 ? 8 : 0;
+    const padX = 18, padY = 10, nameH = 28, rowH = 22;
+    const divH = top3.length > 0 ? 8 : 0;
 
-    // Measure max content width
     ctx.font = nameFont;
     let maxW = ctx.measureText(signName).width;
     ctx.font = rankFont;
@@ -655,7 +1159,6 @@
       ctx.beginPath();
       ctx.moveTo(sX + 12, divY); ctx.lineTo(sX + sW - 12, divY);
       ctx.stroke();
-
       ctx.font = rankFont;
       top3.forEach((r, i) => {
         const label = `${r.rank}. ${r.name}${r.rank > 1 ? "  +" + r.delta + "s" : ""}`;
@@ -673,20 +1176,17 @@
     btn.innerHTML = "Erstelle…"; btn.disabled = true;
 
     try {
-      // Get road-matched route + ranking data in parallel
       const [routePoints, rankingsData] = await Promise.all([
         matchToRoads(d.track).catch(() => d.track.map(p => [p[0], p[1]])),
         Promise.all(d.crossings.map(c => buildRankingData(c.sign_id, c.timestamp, myDeviceId)))
       ]);
 
-      // Canvas: 1080×1350 (Instagram 4:5 portrait)
       const W = 1080, H = 1350;
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, W, H); // transparent background
+      ctx.clearRect(0, 0, W, H);
 
-      // Bounding box of route
       let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
       for (const p of routePoints) {
         minLat = Math.min(minLat, p[0]); maxLat = Math.max(maxLat, p[0]);
@@ -705,7 +1205,6 @@
       const toX = lon => offX + (lon - minLon) * sc;
       const toY = lat => offY + (maxLat - lat) * sc;
 
-      // Route line
       ctx.beginPath();
       ctx.strokeStyle = "#000";
       ctx.lineWidth   = 8;
@@ -720,20 +1219,17 @@
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Start dot
       ctx.beginPath();
       ctx.arc(toX(routePoints[0][1]), toY(routePoints[0][0]), 14, 0, Math.PI * 2);
       ctx.fillStyle = "#00C853"; ctx.fill();
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
 
-      // End dot
       const ep = routePoints[routePoints.length - 1];
       ctx.beginPath();
       ctx.arc(toX(ep[1]), toY(ep[0]), 14, 0, Math.PI * 2);
       ctx.fillStyle = "#FF5252"; ctx.fill();
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
 
-      // Ortsschild markers
       for (let i = 0; i < d.crossings.length; i++) {
         const c = d.crossings[i];
         let nearest = null, minDiff = Infinity;
@@ -745,7 +1241,6 @@
         drawSignMarker(ctx, toX(nearest[1]), toY(nearest[0]), c.sign_name, rankingsData[i]);
       }
 
-      // Download PNG
       canvas.toBlob(blob => {
         const a = document.createElement("a");
         a.href     = URL.createObjectURL(blob);
@@ -774,11 +1269,44 @@
       const rides = await fetchJSON(url);
 
       if (rides.length === 0) {
-        root.innerHTML = '<div class="loading">Noch keine Fahrten — beende eine Aktivität auf dem Garmin.</div>';
+        root.innerHTML = `<div class="empty-state">
+          <svg width="72" height="48" viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="opacity:.2;margin-bottom:.8rem">
+            <circle cx="40" cy="88" r="28" stroke-width="8"/>
+            <circle cx="160" cy="88" r="28" stroke-width="8"/>
+            <circle cx="100" cy="80" r="5" fill="currentColor" stroke="none"/>
+            <line x1="40" y1="88" x2="100" y2="80" stroke-width="6"/>
+            <line x1="40" y1="88" x2="92" y2="42" stroke-width="5"/>
+            <line x1="100" y1="80" x2="92" y2="42" stroke-width="7"/>
+            <line x1="92" y1="42" x2="132" y2="44" stroke-width="5"/>
+            <line x1="100" y1="80" x2="132" y2="44" stroke-width="7"/>
+            <line x1="132" y1="44" x2="160" y2="88" stroke-width="6"/>
+            <path d="M82 38 C86 34 96 34 106 37" stroke-width="7"/>
+            <line x1="132" y1="44" x2="138" y2="30" stroke-width="5"/>
+            <path d="M130 30 C135 24 143 24 147 30 C149 36 146 42 141 42" stroke-width="5"/>
+          </svg>
+          <strong>Noch keine Fahrten</strong>
+          Beende eine Aktivität auf dem Garmin und sie erscheint hier.
+        </div>`;
         return;
       }
 
-      root.innerHTML = "";
+      root.innerHTML = `<div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:6px;opacity:.6">
+          <circle cx="40" cy="88" r="28" stroke-width="8"/>
+          <circle cx="160" cy="88" r="28" stroke-width="8"/>
+          <circle cx="100" cy="80" r="5" fill="currentColor" stroke="none"/>
+          <line x1="40" y1="88" x2="100" y2="80" stroke-width="6"/>
+          <line x1="40" y1="88" x2="92" y2="42" stroke-width="5"/>
+          <line x1="100" y1="80" x2="92" y2="42" stroke-width="7"/>
+          <line x1="92" y1="42" x2="132" y2="44" stroke-width="5"/>
+          <line x1="100" y1="80" x2="132" y2="44" stroke-width="7"/>
+          <line x1="132" y1="44" x2="160" y2="88" stroke-width="6"/>
+          <path d="M82 38 C86 34 96 34 106 37" stroke-width="7"/>
+          <line x1="132" y1="44" x2="138" y2="30" stroke-width="5"/>
+          <path d="M130 30 C135 24 143 24 147 30 C149 36 146 42 141 42" stroke-width="5"/>
+        </svg>
+        Deine Fahrten
+      </div>`;
       const list = document.createElement("div");
       list.className = "ride-list";
 
@@ -792,12 +1320,19 @@
               <div class="ride-title">${fmtTime(ride.started_at)}</div>
               <div class="ride-meta">${fmtDuration(dur)}</div>
             </div>
-            <div class="toggle-icon">▼</div>
+            <div class="toggle-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
           </div>
           <div class="ride-body">
             <div class="map-container" id="map-${ride.id}"></div>
             <div class="ride-actions">
-              <button class="btn btn-image"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>Share</button>
+              <button class="btn btn-image">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                Share
+              </button>
               <button class="btn btn-delete">Löschen</button>
             </div>
           </div>`;
