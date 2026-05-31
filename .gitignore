@@ -22,3 +22,8 @@ bin/
 # Large skill framework (Claude tooling, not app code)
 .agents/
 .claude/skills/
+source/
+resources/
+monkey.jungle
+manifest.xml
+website/
