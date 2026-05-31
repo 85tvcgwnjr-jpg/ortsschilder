@@ -1696,13 +1696,16 @@
             <div class="featured-title">${fmtTime(ride.started_at)}</div>
             <div class="featured-meta">${fmtDuration(dur)}</div>
           </div>
-          <button class="btn btn-delete" id="featured-delete">Löschen</button>
         </div>
         <div class="map-container" id="map-featured"></div>
         <div class="ride-actions">
           <button class="btn btn-image" id="featured-share">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
             Share
+          </button>
+          <button class="btn btn-delete" id="featured-delete" style="margin-left:auto">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Löschen
           </button>
         </div>
       </div>`;
@@ -1724,10 +1727,39 @@
 
     document.getElementById("featured-delete").addEventListener("click", async () => {
       if (!confirm("Fahrt löschen?")) return;
-      await fetch(SUPABASE_URL + `/rest/v1/rides?id=eq.${ride.id}`, {
-        method: "DELETE",
-        headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY }
-      });
+      const delHeaders = { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY };
+
+      // Eigene Crossings dieser Fahrt laden
+      const ownCrossings = await fetchJSON(
+        `/rest/v1/crossings?device_id=eq.${encodeURIComponent(ride.device_id)}` +
+        `&timestamp=gte.${ride.started_at}&timestamp=lte.${ride.ended_at}` +
+        `&select=sign_id,timestamp`
+      );
+
+      // Prüfen ob ein anderes Gerät noch einen Crossing-Timestamp braucht:
+      // → gibt es für irgendeinen meiner Crossings einen fremden Crossing
+      //   am selben Schild im ±30s-Fenster dessen Fahrt noch existiert?
+      let otherStillNeeds = false;
+      for (const c of ownCrossings) {
+        const others = await fetchJSON(
+          `/rest/v1/crossings?sign_id=eq.${encodeURIComponent(c.sign_id)}` +
+          `&device_id=neq.${encodeURIComponent(ride.device_id)}` +
+          `&timestamp=gte.${c.timestamp - 30}&timestamp=lte.${c.timestamp + 30}` +
+          `&select=device_id,timestamp&limit=1`
+        );
+        if (others.length > 0) { otherStillNeeds = true; break; }
+      }
+
+      // Crossings löschen wenn: niemand mehr braucht SIE, ODER älter als 7 Tage
+      const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 3600;
+      const deletions = [fetch(SUPABASE_URL + `/rest/v1/rides?id=eq.${ride.id}`, { method: "DELETE", headers: delHeaders })];
+      if (!otherStillNeeds || ride.ended_at < sevenDaysAgo) {
+        deletions.push(fetch(
+          SUPABASE_URL + `/rest/v1/crossings?device_id=eq.${encodeURIComponent(ride.device_id)}&timestamp=gte.${ride.started_at}&timestamp=lte.${ride.ended_at}`,
+          { method: "DELETE", headers: delHeaders }
+        ));
+      }
+      await Promise.all(deletions);
       allRides = allRides.filter(r => r.id !== ride.id);
       if (allRides.length === 0) {
         loadApp(activeDeviceId);
