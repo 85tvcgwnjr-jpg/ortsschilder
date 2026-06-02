@@ -233,64 +233,6 @@
     }
     .sidebar-edit-btn:hover { color: var(--yellow); }
 
-    .sidebar-device-edit {
-      display: none;
-      margin-top: 10px;
-    }
-    .sidebar-device-edit.active { display: block; }
-
-    .sidebar-edit-input {
-      width: 100%;
-      background: var(--surface3);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      padding: 0.5rem 0.75rem;
-      color: var(--text);
-      font-family: var(--fb);
-      font-size: 0.8rem;
-      outline: none;
-      margin-bottom: 7px;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .sidebar-edit-input:focus {
-      border-color: var(--yellow);
-      box-shadow: 0 0 0 3px var(--yellow-lo);
-    }
-    .sidebar-edit-actions { display: flex; gap: 6px; }
-    .sidebar-save-btn {
-      flex: 1;
-      background: var(--yellow);
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      padding: 0.42rem 0;
-      font-family: var(--fd);
-      font-size: 1rem;
-      letter-spacing: 0.07em;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .sidebar-save-btn:hover { background: #f5c400; }
-    .sidebar-save-btn:disabled { background: var(--surface3); color: var(--text3); cursor: not-allowed; }
-    .sidebar-cancel-btn {
-      background: none;
-      color: var(--text2);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      padding: 0.42rem 0.75rem;
-      font-family: var(--fb);
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .sidebar-cancel-btn:hover { color: var(--text); border-color: var(--text2); }
-    .sidebar-edit-msg {
-      font-size: 0.73rem;
-      margin-top: 5px;
-      display: none;
-      line-height: 1.4;
-    }
-
     .sidebar-nav {
       flex: 1;
       padding: 0.6rem 0;
@@ -417,6 +359,12 @@
       letter-spacing: 0.08em;
       color: var(--text);
       margin-bottom: 1.4rem;
+    }
+    /* "Passwort zurücksetzen" ist länger — kleiner + einzeilig */
+    #reset-view h2 {
+      font-size: 1.7rem;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
     }
 
     .auth-input {
@@ -747,6 +695,136 @@
       margin-bottom: 0.5rem;
     }
 
+    /* ── Geräte-ID verknüpfen (Hauptscreen, wenn noch kein Gerät) ── */
+    .link-device {
+      max-width: 420px;
+      margin: 3.5rem auto 0;
+      padding: 0 1.25rem;
+      text-align: center;
+    }
+    .link-device img {
+      width: 130px; height: auto;
+      opacity: 0.9;
+      margin: 0 auto 1.4rem;
+      display: block;
+    }
+    .link-device h2 {
+      font-family: var(--fd);
+      font-size: 1.7rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .link-device p {
+      font-size: 0.86rem;
+      color: var(--text2);
+      line-height: 1.55;
+      margin-bottom: 1.6rem;
+    }
+    .link-input-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .link-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: var(--fb);
+      font-size: 0.95rem;
+      padding: 0.7rem 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .link-input:focus { border-color: var(--yellow); }
+    .link-save-btn {
+      background: var(--yellow);
+      color: #000;
+      font-weight: 700;
+      font-family: var(--fb);
+      font-size: 0.9rem;
+      border: none;
+      border-radius: var(--r);
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .link-save-btn:disabled { opacity: 0.5; cursor: default; }
+    .link-or {
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin: 0.6rem 0;
+    }
+    .link-browse-btn {
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      color: var(--text2);
+      font-family: var(--fb);
+      font-size: 0.86rem;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .link-browse-btn:hover { border-color: var(--yellow); color: var(--text); }
+    .link-msg { font-size: 0.82rem; color: var(--red); margin-top: 0.6rem; display: none; }
+
+    /* ── Auswahl-Fenster (Fahrten ohne Profil) ── */
+    .picker-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .picker-overlay.open { display: flex; }
+    .picker-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      width: min(440px, 100%);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .picker-head {
+      padding: 1.1rem 1.3rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .picker-head h3 {
+      font-family: var(--fd);
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .picker-close {
+      background: none; border: none; color: var(--text3);
+      font-size: 1.4rem; cursor: pointer; line-height: 1;
+    }
+    .picker-close:hover { color: var(--text); }
+    .picker-list { overflow-y: auto; flex: 1; }
+    .picker-item {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 0.85rem 1.3rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .picker-item:hover { background: var(--yellow-lo); }
+    .picker-item .picker-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--yellow); flex-shrink: 0; opacity: 0.7;
+    }
+    .picker-item .picker-info { flex: 1; min-width: 0; }
+    .picker-item .picker-date { font-size: 0.92rem; font-weight: 600; color: var(--text); }
+    .picker-item .picker-sub  { font-size: 0.74rem; color: var(--text3); margin-top: 0.12rem; }
+    .picker-empty { padding: 2.5rem 1.3rem; text-align: center; color: var(--text3); font-size: 0.86rem; }
+
     .error {
       color: var(--red);
       text-align: center;
@@ -943,7 +1021,7 @@
   <div class="sidebar-profile">
       <div class="sidebar-big-avatar" id="sidebar-avatar">?</div>
       <div class="sidebar-username" id="sidebar-name"></div>
-      <div class="sidebar-device-row">
+      <div class="sidebar-device-row" id="sidebar-device-row">
         <div class="sidebar-device-id" id="sidebar-device"></div>
         <button class="sidebar-edit-btn" id="sidebar-edit-btn" title="Geräte-ID ändern">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -951,14 +1029,6 @@
             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
         </button>
-      </div>
-      <div class="sidebar-device-edit" id="sidebar-device-edit">
-        <input class="sidebar-edit-input" type="text" id="sidebar-device-input" placeholder="Garmin Device ID" autocomplete="off">
-        <div class="sidebar-edit-actions">
-          <button class="sidebar-save-btn" id="sidebar-save-device">Speichern</button>
-          <button class="sidebar-cancel-btn" id="sidebar-cancel-device">Abbrechen</button>
-        </div>
-        <div class="sidebar-edit-msg" id="sidebar-edit-msg"></div>
       </div>
     </div>
 
@@ -987,8 +1057,7 @@
     <div class="sidebar-delete-confirm" id="sidebar-delete-confirm">
       <div class="sidebar-delete-warning">
         <strong>Achtung:</strong> Dein Konto sowie <strong>alle</strong> deine Fahrten,
-        Sprints und Daten werden unwiderruflich gelöscht. Das kann nicht rückgängig
-        gemacht werden.
+        Sprints und Daten werden unwiderruflich gelöscht.
       </div>
       <div class="sidebar-delete-actions">
         <button class="sidebar-del-confirm-btn" id="sidebar-delete-confirm-btn">Endgültig löschen</button>
@@ -999,6 +1068,17 @@
     <div class="sidebar-wordmark">ortsschildersprint</div>
   </div>
 
+</div>
+
+<!-- ══ Auswahl-Fenster: Fahrten ohne Profil ══ -->
+<div class="picker-overlay" id="picker-overlay">
+  <div class="picker-box">
+    <div class="picker-head">
+      <h3>Fahrt auswählen</h3>
+      <button class="picker-close" id="picker-close">✕</button>
+    </div>
+    <div class="picker-list" id="picker-list"></div>
+  </div>
 </div>
 
 <!-- ══ Auth Screen ══ -->
@@ -1308,89 +1388,40 @@
 
   // ── Geräte-ID bearbeiten ──────────────────────────────────────────────────
 
+  // Bearbeiten → zurück zum großen Verknüpfen-Hauptscreen (wie ohne Geräte-ID),
+  // mit der aktuellen ID vorausgefüllt zum Ändern.
   document.getElementById("sidebar-edit-btn").addEventListener("click", () => {
-    const editArea = document.getElementById("sidebar-device-edit");
-    const input    = document.getElementById("sidebar-device-input");
-    const msgEl    = document.getElementById("sidebar-edit-msg");
-    const current  = document.getElementById("sidebar-device").textContent.replace("Gerät: ", "");
-    input.value = current;
-    msgEl.style.display = "none";
-    editArea.classList.toggle("active");
-    if (editArea.classList.contains("active")) {
-      input.focus();
-      input.select();
-    }
+    const current = document.getElementById("sidebar-device").textContent.replace("Gerät: ", "").trim();
+    closeSidebar();
+    renderLinkDevice(current);
   });
 
-  document.getElementById("sidebar-cancel-device").addEventListener("click", () => {
-    document.getElementById("sidebar-device-edit").classList.remove("active");
-    document.getElementById("sidebar-edit-msg").style.display = "none";
-  });
+  // Geteilte Speicher-Logik: schreibt device_id in Auth-Metadaten + profiles-Tabelle.
+  // Genutzt von der Sidebar UND vom Verknüpfen-Screen auf dem Hauptbildschirm.
+  async function saveDeviceId(newDevice) {
+    const { data, error } = await sb.auth.updateUser({ data: { device_id: newDevice } });
+    if (error) throw error;
 
-  document.getElementById("sidebar-save-device").addEventListener("click", async () => {
-    const newDevice = document.getElementById("sidebar-device-input").value.trim();
-    const msgEl     = document.getElementById("sidebar-edit-msg");
-    const saveBtn   = document.getElementById("sidebar-save-device");
+    const displayName = data.user.user_metadata?.display_name || "";
+    const sess = (await sb.auth.getSession()).data.session;
 
-    if (!newDevice) {
-      msgEl.textContent = "Bitte eine Geräte-ID eingeben";
-      msgEl.style.color = "var(--red)";
-      msgEl.style.display = "block";
-      return;
+    if (displayName && sess) {
+      await fetch(SUPABASE_URL + "/rest/v1/profiles", {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + sess.access_token,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify({ device_id: newDevice, display_name: displayName, updated_at: new Date().toISOString() })
+      }).catch(() => {});
     }
 
-    saveBtn.textContent = "…";
-    saveBtn.disabled = true;
-    msgEl.style.display = "none";
-
-    try {
-      const { data, error } = await sb.auth.updateUser({
-        data: { device_id: newDevice }
-      });
-      if (error) throw error;
-
-      const displayName = data.user.user_metadata?.display_name || "";
-      const sess = (await sb.auth.getSession()).data.session;
-
-      // Profiles-Tabelle aktualisieren
-      if (displayName && sess) {
-        await fetch(SUPABASE_URL + "/rest/v1/profiles", {
-          method: "POST",
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + sess.access_token,
-            "Content-Type": "application/json",
-            "Prefer": "resolution=merge-duplicates"
-          },
-          body: JSON.stringify({ device_id: newDevice, display_name: displayName, updated_at: new Date().toISOString() })
-        }).catch(() => {});
-      }
-
-      // UI aktualisieren
-      document.getElementById("sidebar-device").textContent = "Gerät: " + newDevice;
-      document.getElementById("sidebar-device-edit").classList.remove("active");
-
-      // Fahrten mit neuer ID neu laden
-      const root = document.getElementById("root");
-      root.className = "loading";
-      root.textContent = "Lade Fahrten…";
-      loadApp(newDevice);
-
-    } catch (e) {
-      msgEl.textContent = "Fehler: " + e.message;
-      msgEl.style.color = "var(--red)";
-      msgEl.style.display = "block";
-    } finally {
-      saveBtn.textContent = "Speichern";
-      saveBtn.disabled = false;
-    }
-  });
-
-  // Enter-Taste im Input = Speichern
-  document.getElementById("sidebar-device-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") document.getElementById("sidebar-save-device").click();
-    if (e.key === "Escape") document.getElementById("sidebar-cancel-device").click();
-  });
+    // Sidebar-Anzeige aktualisieren + Geräte-Zeile einblenden
+    document.getElementById("sidebar-device").textContent = "Gerät: " + newDevice;
+    document.getElementById("sidebar-device-row").style.display = "";
+  }
 
   // ── Auth State ────────────────────────────────────────────────────────────
 
@@ -1407,7 +1438,9 @@
       const initial = displayName ? displayName[0].toUpperCase() : "?";
       document.getElementById("sidebar-avatar").textContent = initial;
       document.getElementById("sidebar-name").textContent   = displayName || "";
-      document.getElementById("sidebar-device").textContent = deviceId ? "Gerät: " + deviceId : "Kein Gerät verknüpft";
+      // Geräte-Zeile (mit Ändern-Button) nur zeigen, wenn eine ID verknüpft ist.
+      document.getElementById("sidebar-device").textContent = deviceId ? "Gerät: " + deviceId : "";
+      document.getElementById("sidebar-device-row").style.display = deviceId ? "" : "none";
 
       // Aktiviere Animations- und Hamburger-Modus
       header.classList.add("app-mode");
@@ -1767,15 +1800,129 @@
 
   const BIKE_SVG = `<img src="imageBike.png" style="width:110px;height:auto;opacity:0.25;margin-bottom:.8rem;display:block;margin-left:auto;margin-right:auto">`;
 
+  // ── Verknüpfen-Screen (kein Gerät) ────────────────────────────────────────
+
+  function renderLinkDevice(prefill) {
+    const root = document.getElementById("root");
+    if (activeLeafletMap) { activeLeafletMap.remove(); activeLeafletMap = null; }
+    root.className = '';
+    const presetVal = (prefill || "").replace(/"/g, "");
+    root.innerHTML = `
+      <div class="link-device">
+        <img src="imageRadcomputer.png" alt="Garmin Radcomputer">
+        <h2>Garmin Geräte-ID verknüpfen</h2>
+        <p>Gib die ID ein, die dein Radcomputer im Ortsschilder-Sprint-Datenfeld
+           anzeigt (<strong>ID=…</strong>) — oder wähle sie aus einer deiner Fahrten.</p>
+        <div class="link-input-row">
+          <input class="link-input" id="link-input" type="text" placeholder="Geräte-ID" autocomplete="off" value="${presetVal}">
+          <button class="link-save-btn" id="link-save">Verknüpfen</button>
+        </div>
+        <div class="link-or">oder</div>
+        <button class="link-browse-btn" id="link-browse">Aus Fahrten auswählen</button>
+        <div class="link-msg" id="link-msg"></div>
+      </div>`;
+
+    const input  = document.getElementById("link-input");
+    const saveBtn = document.getElementById("link-save");
+    const msgEl  = document.getElementById("link-msg");
+
+    async function doSave() {
+      const val = input.value.trim();
+      if (!val) {
+        msgEl.textContent = "Bitte eine Geräte-ID eingeben";
+        msgEl.style.display = "block";
+        return;
+      }
+      saveBtn.disabled = true;
+      saveBtn.textContent = "…";
+      msgEl.style.display = "none";
+      try {
+        await saveDeviceId(val);
+        loadApp(val); // lädt jetzt die Fahrten dieses Geräts
+      } catch (e) {
+        msgEl.textContent = "Fehler: " + e.message;
+        msgEl.style.display = "block";
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Verknüpfen";
+      }
+    }
+
+    saveBtn.addEventListener("click", doSave);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") doSave(); });
+    document.getElementById("link-browse").addEventListener("click", () =>
+      openRidePicker((deviceId) => { input.value = deviceId; })
+    );
+  }
+
+  // ── Auswahl-Fenster: Fahrten ohne verknüpftes Profil ──────────────────────
+
+  async function openRidePicker(onPick) {
+    const overlay = document.getElementById("picker-overlay");
+    const listEl  = document.getElementById("picker-list");
+    overlay.classList.add("open");
+    listEl.innerHTML = `<div class="picker-empty">Lade Fahrten…</div>`;
+
+    try {
+      // Alle Fahrten + alle bereits verknüpften device_ids holen
+      const [rides, profiles] = await Promise.all([
+        fetchJSON(`/rest/v1/rides?select=device_id,started_at,ended_at&order=started_at.desc&limit=200`),
+        fetchJSON(`/rest/v1/profiles?select=device_id`)
+      ]);
+
+      const linked = new Set(profiles.map(p => p.device_id));
+      const unclaimed = rides.filter(r => r.device_id && !linked.has(r.device_id));
+
+      if (unclaimed.length === 0) {
+        listEl.innerHTML = `<div class="picker-empty">Keine unverknüpften Fahrten gefunden.<br>
+          Beende eine Aktivität auf dem Garmin und versuche es erneut.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      for (const r of unclaimed) {
+        const dur = r.ended_at - r.started_at;
+        const item = document.createElement("div");
+        item.className = "picker-item";
+        item.innerHTML = `
+          <div class="picker-dot"></div>
+          <div class="picker-info">
+            <div class="picker-date">${fmtTime(r.started_at)}</div>
+            <div class="picker-sub">${fmtDuration(dur)} · ID …${r.device_id.slice(-6)}</div>
+          </div>`;
+        item.addEventListener("click", () => {
+          onPick(r.device_id);
+          closeRidePicker();
+        });
+        listEl.appendChild(item);
+      }
+    } catch (e) {
+      listEl.innerHTML = `<div class="picker-empty" style="color:var(--red)">Fehler: ${e.message}</div>`;
+    }
+  }
+
+  function closeRidePicker() {
+    document.getElementById("picker-overlay").classList.remove("open");
+  }
+
+  document.getElementById("picker-close").addEventListener("click", closeRidePicker);
+  document.getElementById("picker-overlay").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("picker-overlay")) closeRidePicker();
+  });
+
   async function loadApp(myDeviceId) {
     activeDeviceId = myDeviceId;
     const root = document.getElementById("root");
     root.className = '';
 
+    // Noch keine Geräte-ID verknüpft → Verknüpfen-Screen statt Fahrten zeigen.
+    if (!myDeviceId) {
+      document.getElementById("sidebar-rides").innerHTML = '';
+      renderLinkDevice();
+      return;
+    }
+
     try {
-      const url = myDeviceId
-        ? `/rest/v1/rides?device_id=eq.${encodeURIComponent(myDeviceId)}&select=id,device_id,started_at,ended_at&order=started_at.desc&limit=50`
-        : `/rest/v1/rides?select=id,device_id,started_at,ended_at&order=started_at.desc&limit=50`;
+      const url = `/rest/v1/rides?device_id=eq.${encodeURIComponent(myDeviceId)}&select=id,device_id,started_at,ended_at&order=started_at.desc&limit=50`;
 
       allRides = await fetchJSON(url);
 
