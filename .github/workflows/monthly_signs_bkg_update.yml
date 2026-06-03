@@ -16,7 +16,7 @@ jobs:
   update-signs-bkg:
     name: BKG Gemeindegrenzen × Straßennetz
     runs-on: ubuntu-latest
-    timeout-minutes: 180   # BKG-Verarbeitung: bis zu 3h für ganz Deutschland
+    timeout-minutes: 300   # BKG-Verarbeitung: bis zu 5h für ganz Deutschland
 
     steps:
       - name: Checkout

@@ -163,21 +163,6 @@ def build_index(features: list[dict]) -> tuple[list, STRtree]:
     """Erstellt Spatial Index aus Gemeindegrenzen."""
     print("Spatial Index aufbauen...")
 
-    # Debug: erstes Feature ausgeben um Feldnamen zu prüfen
-    if features:
-        first_props = features[0].get("properties", {})
-        first_geom  = features[0].get("geometry", {})
-        print(f"  Debug — Felder: {list(first_props.keys())[:10]}")
-        print(f"  Debug — Geometry-Typ: {first_geom.get('type', '?')}")
-        if first_geom.get("coordinates"):
-            sample = first_geom["coordinates"]
-            # Zeige erste Koordinate um CRS zu erkennen
-            try:
-                first_coord = sample[0][0] if isinstance(sample[0][0], (list, tuple)) else sample[0]
-                print(f"  Debug — Erste Koordinate: {first_coord[:2] if len(first_coord) >= 2 else first_coord}")
-            except Exception:
-                pass
-
     muni_meta: list[tuple] = []   # (boundary_geom, name, bundesland)
     boundaries = []
     errors = 0
@@ -191,6 +176,10 @@ def build_index(features: list[dict]) -> tuple[list, STRtree]:
             name = props.get("gen", "").strip()
             snl  = str(props.get("sn_l", "")).zfill(2)
             bl   = BL_CODES.get(snl, snl)
+
+            # gf=4: Landfläche — gf=2 sind Wasserflächen (Seen, Flüsse) ausschließen
+            if props.get("gf") != 4:
+                continue
 
             if not name or geom.is_empty:
                 continue
