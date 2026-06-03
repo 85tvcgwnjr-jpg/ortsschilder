@@ -505,7 +505,9 @@ if __name__ == "__main__":
         g_signs = compute_crossings(road_geoms, road_types, gemeinde_meta, g_tree, bl)
         print(f"  Gemeinden: {len(g_signs):,} Schilder")
 
-        # 2c. Ortsteil-Grenzen aus OSM
+        # 2c. Ortsteil-Grenzen aus OSM (admin_level 9/10)
+        # BKG bietet keine Gemeindeteile via WFS an — OSM ist die vollständigste
+        # kostenlose Quelle für Ortsteilgrenzen in Deutschland.
         time.sleep(3)
         ortsteil_relations = fetch_ortsteil_relations(bl)
         o_signs: dict[str, dict] = {}
