@@ -273,7 +273,8 @@ def fetch_ortsteil_relations(bundesland: str) -> list[dict]:
       9 = Stadtbezirk (z.B. Köln-Rodenkirchen)
      10 = Stadtteil/Ortsteil (z.B. Köln-Junkersdorf)
     """
-    query = f"""[out:json][timeout:300];
+    # timeout=600: Bayern/NRW haben tausende Ortsteile → große Antwort
+    query = f"""[out:json][timeout:600];
 area["name"="{bundesland}"]["admin_level"="4"]->.bl;
 relation["admin_level"~"^(9|10)$"]["boundary"="administrative"]["name"](area.bl);
 out geom;"""
@@ -467,11 +468,17 @@ def delete_stale(current_ids: set[str]) -> None:
         return
 
     print(f"  Lösche {len(stale):,} veraltete Einträge...")
+    failed = 0
     for i in range(0, len(stale), 200):
         batch = stale[i : i + 200]
         ids_p = urllib.parse.quote("(" + ",".join(batch) + ")")
-        _sb("DELETE", f"/rest/v1/signs_bkg?id=in.{ids_p}")
-    print(f"  {len(stale):,} gelöscht.")
+        status, _ = _sb("DELETE", f"/rest/v1/signs_bkg?id=in.{ids_p}")
+        if status not in (200, 204):
+            failed += len(batch)
+    if failed:
+        print(f"  ⚠ {failed:,} Einträge konnten nicht gelöscht werden.")
+    else:
+        print(f"  {len(stale):,} gelöscht.")
 
 # ── Hauptprogramm ─────────────────────────────────────────────────────────────
 
@@ -508,7 +515,6 @@ if __name__ == "__main__":
         # 2c. Ortsteil-Grenzen aus OSM (admin_level 9/10)
         # BKG bietet keine Gemeindeteile via WFS an — OSM ist die vollständigste
         # kostenlose Quelle für Ortsteilgrenzen in Deutschland.
-        time.sleep(3)
         ortsteil_relations = fetch_ortsteil_relations(bl)
         o_signs: dict[str, dict] = {}
 
