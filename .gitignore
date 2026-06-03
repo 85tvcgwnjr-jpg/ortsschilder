@@ -27,3 +27,4 @@ manifest.xml
 
 # Edge Function — deployed directly via Supabase dashboard, not via git
 supabase/
+scripts/
