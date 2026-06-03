@@ -15,13 +15,12 @@ bin/
 .DS_Store
 *.swp
 
-# Claude local settings (personal, not project-wide)
-.claude/settings.local.json
-.claude/launch.json
+# Claude config — alles ignorieren außer RULES.md
+.claude/*
+!.claude/RULES.md
 
 # Large skill framework (Claude tooling, not app code)
 .agents/
-.claude/skills/
 source/
 resources/
 monkey.jungle
