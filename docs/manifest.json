@@ -1,0 +1,23 @@
+{
+  "name": "Ortsschilder Sprint",
+  "short_name": "Ortsschilder",
+  "description": "Ortsschilder als Sprint-Ziele — Garmin DataField App",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08080a",
+  "theme_color": "#FFCC00",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
