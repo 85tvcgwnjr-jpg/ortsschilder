@@ -166,10 +166,13 @@
       backdrop-filter: blur(3px);
       z-index: 999;
       opacity: 0;
-      pointer-events: none; /* niemals Mausevents abfangen — verhindert Flackern */
+      pointer-events: none;
       transition: opacity 0.35s;
     }
-    .sidebar-overlay.open { opacity: 1; }
+    .sidebar-overlay.open {
+      opacity: 1;
+      pointer-events: all; /* verschwommener Bereich blockiert Klicks wenn Sidebar offen */
+    }
 
     .sidebar {
       position: fixed;
@@ -2226,6 +2229,7 @@
       item.addEventListener("click", async () => {
         document.querySelectorAll(".sidebar-ride-item").forEach(el => el.classList.remove("active"));
         item.classList.add("active");
+        closeSidebar();
         await renderFeaturedRide(ride);
         renderSidebarRides(ride.id);
       });
