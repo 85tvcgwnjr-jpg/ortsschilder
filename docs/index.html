@@ -1511,8 +1511,9 @@
     header.classList.remove("menu-open");
     hamburgerBtn.classList.remove("is-open");
     header.style.zIndex = "";
-    // Maus noch im Banner → warten bis sie raus ist
-    if (mouseInHeader) waitForLeave = true;
+    // Immer warten bis Maus einmal aus dem Banner raus ist
+    // (auch wenn Maus gerade nicht im Banner ist — sie könnte sofort rein)
+    waitForLeave = true;
   }
 
   // Sidebar öffnet/schließt per Hover über den Header-Banner
