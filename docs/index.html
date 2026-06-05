@@ -108,6 +108,14 @@
       animation: sign-pulse 0.9s ease-in-out infinite;
     }
 
+    /* no-hover: Banner-Animationen während waitForLeave deaktiviert */
+    header.app-mode.no-hover:hover .cyclists-group {
+      transform: none !important;
+      opacity: 0.5 !important;
+    }
+    header.app-mode.no-hover:hover .speed-lines line { opacity: 0 !important; }
+    header.app-mode.no-hover:hover .sign-group { animation: none !important; }
+
     /* Menu open: cyclists sprint fully off right edge */
     header.menu-open .cyclists-group {
       transform: translateX(1000px) !important;
@@ -1513,7 +1521,7 @@
     header.classList.remove("menu-open");
     hamburgerBtn.classList.remove("is-open");
     header.style.zIndex = "";
-    if (lock && wasOpen) waitForLeave = true;
+    if (lock && wasOpen) { waitForLeave = true; header.classList.add("no-hover"); }
   }
 
   // Sidebar öffnet/schließt per Hover über den Header-Banner
@@ -1538,7 +1546,8 @@
   });
   header.addEventListener("mouseleave", (e) => {
     mouseInHeader = false;
-    waitForLeave  = false; // Maus raus → Sperre aufheben, ab jetzt normal
+    waitForLeave  = false;
+    header.classList.remove("no-hover");
     // Maus wechselt zur Sidebar → nicht schließen
     if (isInSidebar(e.relatedTarget)) { cancelClose(); return; }
     scheduleClose();
@@ -1557,6 +1566,7 @@
       closeSidebar(true); // X: explizit → Sperre bis Maus Banner verlässt
     } else {
       waitForLeave = false;
+      header.classList.remove("no-hover");
       openSidebar();
     }
   });
