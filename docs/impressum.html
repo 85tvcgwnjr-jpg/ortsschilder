@@ -19,8 +19,10 @@
       line-height: 1.7;
     }
     header {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       background: #0d0d10;
       border-bottom: 2px solid #FFCC00;
@@ -29,6 +31,7 @@
       align-items: center;
       gap: 1rem;
     }
+    body { padding-top: 60px; }
     header a { color: #999; text-decoration: none; font-size: 0.85rem; }
     header a:hover { color: #FFCC00; }
     header h1 { font-size: 1.1rem; font-weight: 700; color: #FFCC00; }
