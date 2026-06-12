@@ -2363,50 +2363,43 @@
 
   // Plattform-Erkennung
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isMacSafari = !isIos
-    && /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent)
-    && /Mac/.test(navigator.platform || navigator.userAgent);
   const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
                           || navigator.standalone === true;
 
   if (!isInStandaloneMode) {
-    if (isIos) {
-      // iOS Safari: Button zeigen, Anleitung bei Klick
-      installBtn.style.display = 'flex';
-      installBtn.addEventListener('click', () => {
-        iosTip.style.display = iosTip.style.display === 'block' ? 'none' : 'block';
-      });
-      iosClose.addEventListener('click', () => { iosTip.style.display = 'none'; });
+    // Button immer anzeigen (außer wenn bereits als App installiert)
+    installBtn.style.display = 'flex';
 
-    } else if (isMacSafari) {
-      // Mac Safari: Button zeigen, Dock-Anleitung bei Klick
-      installBtn.style.display = 'flex';
-      installBtn.addEventListener('click', () => {
-        macTip.style.display = macTip.style.display === 'block' ? 'none' : 'block';
-      });
-      macClose.addEventListener('click', () => { macTip.style.display = 'none'; });
+    // Chrome/Android/Edge: nativen Prompt abfangen
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+    window.addEventListener('appinstalled', () => {
+      installBtn.style.display = 'none';
+      iosTip.style.display = 'none';
+      macTip.style.display  = 'none';
+    });
 
-    } else {
-      // Chrome/Android/Edge: nativer Install-Prompt
-      let deferredPrompt = null;
-      window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.style.display = 'flex';
-      });
-      installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        // Chrome/Android: nativer Dialog
         deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installBtn.style.display = 'none';
-        }
-        deferredPrompt = null;
-      });
-      window.addEventListener('appinstalled', () => {
-        installBtn.style.display = 'none';
-      });
-    }
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else if (isIos) {
+        // iOS Safari: Anleitung togglen
+        iosTip.style.display = iosTip.style.display === 'block' ? 'none' : 'block';
+        macTip.style.display = 'none';
+      } else {
+        // Mac Safari / andere: Dock-Anleitung togglen
+        macTip.style.display = macTip.style.display === 'block' ? 'none' : 'block';
+        iosTip.style.display = 'none';
+      }
+    });
+
+    iosClose.addEventListener('click', () => { iosTip.style.display = 'none'; });
+    macClose.addEventListener('click', () => { macTip.style.display = 'none'; });
   }
 </script>
 
