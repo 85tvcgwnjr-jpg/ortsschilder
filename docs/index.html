@@ -500,11 +500,27 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       line-height: 1.5;
     }
-    #pwa-ios-tip strong { color: var(--text); display: block; margin-bottom: 0.3rem; }
-    #pwa-ios-tip .tip-close {
+    #pwa-ios-tip strong, #pwa-mac-tip strong { color: var(--text); display: block; margin-bottom: 0.3rem; }
+    #pwa-ios-tip .tip-close, #pwa-mac-tip .tip-close {
       position: absolute; top: 0.4rem; right: 0.6rem;
       background: none; border: none; color: var(--text3);
       cursor: pointer; font-size: 1rem; line-height: 1;
+    }
+    #pwa-mac-tip {
+      position: fixed;
+      bottom: 5rem;
+      right: 1.5rem;
+      background: #1a1a22;
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      font-size: 0.82rem;
+      color: var(--text2);
+      max-width: 230px;
+      display: none;
+      z-index: 801;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      line-height: 1.5;
     }
 
     .auth-error {
@@ -2325,6 +2341,14 @@
   <strong>„Zum Home-Bildschirm"</strong>
 </div>
 
+<!-- Mac Safari Anleitung -->
+<div id="pwa-mac-tip">
+  <button class="tip-close" id="pwa-mac-close" aria-label="Schließen">×</button>
+  <strong>Als App hinzufügen</strong>
+  Klicke oben auf <strong>Ablage</strong> und dann auf<br>
+  <strong>„Zum Dock hinzufügen…"</strong>
+</div>
+
 <script>
   // PWA Service Worker registrieren
   if ('serviceWorker' in navigator) {
@@ -2334,20 +2358,34 @@
   const installBtn = document.getElementById('pwa-install-btn');
   const iosTip     = document.getElementById('pwa-ios-tip');
   const iosClose   = document.getElementById('pwa-ios-close');
+  const macTip     = document.getElementById('pwa-mac-tip');
+  const macClose   = document.getElementById('pwa-mac-close');
 
-  // iOS-Erkennung
+  // Plattform-Erkennung
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isMacSafari = !isIos
+    && /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent)
+    && /Mac/.test(navigator.platform || navigator.userAgent);
   const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
                           || navigator.standalone === true;
 
   if (!isInStandaloneMode) {
     if (isIos) {
-      // iOS: Button zeigen, Anleitung bei Klick
+      // iOS Safari: Button zeigen, Anleitung bei Klick
       installBtn.style.display = 'flex';
       installBtn.addEventListener('click', () => {
         iosTip.style.display = iosTip.style.display === 'block' ? 'none' : 'block';
       });
       iosClose.addEventListener('click', () => { iosTip.style.display = 'none'; });
+
+    } else if (isMacSafari) {
+      // Mac Safari: Button zeigen, Dock-Anleitung bei Klick
+      installBtn.style.display = 'flex';
+      installBtn.addEventListener('click', () => {
+        macTip.style.display = macTip.style.display === 'block' ? 'none' : 'block';
+      });
+      macClose.addEventListener('click', () => { macTip.style.display = 'none'; });
+
     } else {
       // Chrome/Android/Edge: nativer Install-Prompt
       let deferredPrompt = null;
